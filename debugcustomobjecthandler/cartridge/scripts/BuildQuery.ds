@@ -1,0 +1,243 @@
+/**
+* Demandware Script File
+*
+*	@input Task : Object	// One task object at a time read in
+*   @output Query : String	// Pass formatted query string out
+*   @output ParamList : Array
+*
+*/
+importPackage( dw.system );
+importPackage( dw.object );
+importPackage( dw.util );
+
+function execute( args : PipelineDictionary ) : Number
+{
+	var task : Object = args.Task;							// Current task to process
+	var statements : ArrayList = new ArrayList();			// Multiple statements possible, will keep in list and join into single query when complete
+
+	var join = task.join;						
+		
+	var validOperators : ArrayList = ["=","!=","<",">","<=",">=","LIKE","ILIKE","OLDERTHAN","NEWERTHAN"]; // Allowed operators
+	var validTypes : ArrayList = ["string","integer","number","boolean","date","datetime","objectattribute","yearspast","monthspast","dayspast","hourspast","minutespast","secondspast"]; 	// Allowed types
+	var validJoins : ArrayList = ["AND","OR"]; 												// Allowed join types
+
+	var paramCount : Number = 0;	// Need to increment each time we come across a left/right replacement value
+	var paramList : Array = new Array();	// List of left/right values to feed in later		
+		
+	for each ( var statement : ArrayList in task.query ) 	// Cycle through all statement objects for the task, forming a valid string for each
+	{	
+		var operator : String = statement.operator.toString(); 
+
+		// Convert user-input gt, gte, eq to >, >=, =, etc. 
+		switch (operator) {
+							
+			    case "GT":
+        			operator = ">";
+        			break;
+        			
+			    case "LT":
+        			operator = "<";
+        			break;
+        			
+			    case "GTE":
+        			operator = ">=";
+        			break;
+
+			    case "LTE":
+        			operator = "<=";
+        			break;
+
+			    case "EQ":
+        			operator = "=";
+        			break;
+        			
+			    case "NEQ":
+        			operator = "!=";
+        			break;
+        			
+			    case "OLDERTHAN":
+        			operator = "<";
+        			break;        			
+
+			    case "NEWERTHAN":
+        			operator = ">";
+        			break;
+        			        			        											        											
+    			default:
+        			break;
+			}
+		
+		
+		
+		var leftside : String = statement.leftside.toString();
+		var lefttype : String = statement.lefttype.toString();
+		var rightside : String = statement.rightside.toString();
+		var righttype : String = statement.righttype.toString();
+		
+		var isNotEmpty : Boolean = (operator != "") && (leftside != "") && (lefttype != "") && (rightside != "") && (righttype != "");
+		var isValidOperator : Boolean = ( validOperators.indexOf(operator) != -1);		// True if operator is one we expect 
+		var isValidRightType : Boolean = ( validTypes.indexOf(righttype) != -1 ); 		// True if type is one we expect
+		var isValidLeftType : Boolean = ( validTypes.indexOf(lefttype) != -1 ); 		// True if type is one we expect				
+			
+		if (isNotEmpty && isValidOperator && isValidRightType && isValidLeftType) 
+		// Convert left/right side string based on given type -- needs to be valid query format
+		{			
+			var cal = new Calendar();
+			
+			switch (lefttype) {
+				
+			    case "string":
+        			leftside = "'" + leftside + "'";
+        			break;
+
+			    case "boolean":
+        			leftside = leftside.toLowerCase();
+        			break;
+
+			    case "objectattribute":
+				    if (leftside != "creationDate" && leftside != "lastModified") 
+				    {
+	        			leftside = "custom." + leftside;
+				    }
+					break;
+
+			    case "date":
+				    paramList.push(leftside);
+	        		leftside = "{" + paramCount++ + "}";
+					break;
+
+			    case "datetime":
+				    paramList.push(leftside);
+	        		leftside = "{" + paramCount++ + "}";
+					break;
+
+				case "yearspast": 
+					cal.add(Calendar.YEAR, "-" + leftside);
+					paramList.push(cal.getTime());
+				    leftside = "{" + paramCount++ + "}";
+					break;
+			
+				case "monthspast": 
+					cal.add(Calendar.MONTH, "-" + leftside);
+					paramList.push(cal.getTime());
+				    leftside = "{" + paramCount++ + "}";
+					break;
+			
+				case "dayspast": 
+					cal.add(Calendar.DAY, "-" + leftside);
+					paramList.push(cal.getTime());
+				    leftside = "{" + paramCount++ + "}";
+					break;
+			
+				case "hourspast": 
+					cal.add(Calendar.HOUR, "-" + leftside);
+					paramList.push(cal.getTime());
+				    leftside = "{" + paramCount++ + "}";		
+					break;
+			
+				case "minutespast": 
+					cal.add(Calendar.MINUTES, "-" + leftside);
+					paramList.push(cal.getTime());
+				    leftside = "{" + paramCount++ + "}";	
+					break;
+					
+				case "secondspast": 
+					cal.add(Calendar.SECONDS, "-" + leftside);
+					paramList.push(cal.getTime());
+				    leftside = "{" + paramCount++ + "}";		
+					break;
+													
+    			default:
+        			break;
+			}
+
+			cal = new Calendar();	// reset calendar in case it's already been altered by leftside
+
+			switch (righttype) {
+				
+			    case "string":
+	        		rightside = "'" + rightside + "'";
+	        		break;
+
+			    case "boolean":
+	        		rightside = rightside.toLowerCase();
+	        		break;
+
+			    case "objectattribute":
+				    if (rightside != "creationDate" && rightside != "lastModified") 
+				    {
+	        			rightside = "custom." + rightside;
+				    }
+					break;
+			    
+			    case "date":
+	        		paramList.push(rightside);
+	        		rightside = "{" + paramCount++ + "}";
+					break;
+
+			    case "datetime":
+				    paramList.push(rightside);
+	        		rightside = "{" + paramCount++ + "}";
+					break;
+
+				case "yearspast": 
+					cal.add(Calendar.YEAR, "-" + rightside);
+					paramList.push(cal.getTime());
+				    rightside = "{" + paramCount++ + "}";
+					break;
+			
+				case "monthspast": 
+					cal.add(Calendar.MONTH, "-" + rightside);
+					paramList.push(cal.getTime());
+				    rightside = "{" + paramCount++ + "}";
+					break;
+			
+				case "dayspast": 
+					cal.add(Calendar.DAY, "-" + rightside);
+					paramList.push(cal.getTime());
+				    rightside = "{" + paramCount++ + "}";
+					break;
+			
+				case "hourspast": 
+					cal.add(Calendar.HOUR, "-" + rightside);
+					paramList.push(cal.getTime());
+				    rightside = "{" + paramCount++ + "}";		
+					break;
+			
+				case "minutespast": 
+					cal.add(Calendar.MINUTE, "-" + rightside);
+					paramList.push(cal.getTime());
+				    rightside = "{" + paramCount++ + "}";	
+					break;
+					
+				case "Secondspast": 
+					cal.add(Calendar.SECOND, "-" + rightside);
+					paramList.push(cal.getTime());
+				    rightside = "{" + paramCount++ + "}";		
+					break;
+								
+    			default:
+        			break;
+			}
+			
+			
+			// Build and enclose current statement in parens and add to statements list
+			statements.push(	"(" + leftside + " " + operator + " " + rightside + ")" );
+		}
+		else {
+			return PIPELET_ERROR;
+		}
+	}
+		
+	if ( validJoins.indexOf(join) == -1 )	// If no valid join specified, default to AND for most restrictive query
+	{
+		join = "AND";
+	}
+	 
+	var query : String = statements.join(" " + join + " ");  // Join the statements together based on the AND/OR specified in the job
+	
+	args.Query = query;						// Pass formatted query string back out
+	args.ParamList = paramList;
+	
+    return PIPELET_NEXT;
+}

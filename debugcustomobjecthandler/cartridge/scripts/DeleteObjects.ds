@@ -1,0 +1,47 @@
+/**
+* Demandware Script File
+*
+*   @input CustomObject : String
+*	@input Query : String
+*	@input ParamList : Array
+*	@input TransactionBatch : Number
+*   @output QueryCount: Number
+*
+*/
+importPackage( dw.system );
+importPackage( dw.object );
+importPackage( dw.util );
+
+function execute( args : PipelineDictionary ) : Number
+{
+	var targetObject : String = args.CustomObject;
+	var query : String = args.Query;
+	var paramList : Array = args.ParamList;
+	var transactionBatch : Number = args.TransactionBatch;
+
+	var convertedDates : Array = new Array();
+	
+	for each ( var item in paramList ) 
+	{
+		convertedDates.push(new Date(item));
+	} 
+	
+	var queriedObjects : SeekableIterator = CustomObjectMgr.queryCustomObjects(targetObject, query, null, convertedDates);
+	var queryCount : Number = queriedObjects.getCount();
+
+	var loopCount : Number = 0;
+	
+	while (queriedObjects.hasNext() && loopCount < transactionBatch)
+	{
+		CustomObjectMgr.remove(queriedObjects.next());
+		loopCount++;
+	}
+	
+	queriedObjects.close();
+	
+	args.QueryCount = queryCount - loopCount; // When 0, flags to exit decision node
+	
+    return PIPELET_NEXT;
+}
+
+	
