@@ -1,0 +1,60 @@
+/**
+* Demandware Script File
+* 
+*	Reads in XML from a given CustomObjectHandlerJobConfig, parses, and builds manageable task objects
+*
+*   @input JobConfigurationID : String  // CustomObject identifying which job config to read in, passed in as job param
+* 	@output Tasks : dw.util.ArrayList   // Jobs can contain multiple tasks, will process each in turn
+*
+*/
+importPackage( dw.system );
+importPackage( dw.object );
+importPackage( dw.util );
+
+function execute( args : PipelineDictionary ) : Number
+{
+	var jobID : String = args.JobConfigurationID;			// Which config to run
+	var job : CustomObject = CustomObjectMgr.getCustomObject("CustomObjectHandlerJobConfig", jobID);	// Get the actual config
+	var tasksXML : XML = new XML( job.custom.tasksXML );	// Job described in XML, read in as such	
+	var tasks : ArrayList = new ArrayList();				// May have more than one task, need to keep a list to process
+	
+	for each ( var taskXML : XML in tasksXML.task ) 		// Cycle through each task
+	{		
+		var task : Object = new Object();					// Current task to populate
+		var query : ArrayList = new ArrayList();			// Each task's query may be composed of multiple statements, need to join later
+		
+		for each (var q : XML in taskXML.query.*)			// Cycle through each statement, parsing the attributes to build a statement object
+		{	
+			var statement : Object = new Object();			// Current statement being built
+			
+			statement.leftside = q.leftside;
+			statement.rightside = q.rightside;
+			statement.lefttype = q.leftside.@type.toLowerCase(); 		// Convert user input casing to what we expect validTypes in BuildQuery.ds to be
+			statement.righttype = q.rightside.@type.toLowerCase(); 	// Convert user input casing to what we expect validTypes in BuildQuery.ds to be
+			statement.operator = q.operator.toUpperCase();	// Keep LikE, ilIKe, etc. case consistency uppercase
+						
+			query.push(statement);							// Add this statement to our query
+		}
+		
+		var customobjects : ArrayList = new ArrayList();	// Each task may process more than one customobject, need to keep a list to cycle through each in turn
+
+		for each (var customobject : XML in taskXML.customobjects.*)	// Gather list of customobjects for this task
+		{
+			customobjects.push(customobject.toString());
+		}	
+		
+		task.id = taskXML.@id.toString();					// Task's id from <task id="">
+		task.customobjects = customobjects;					// List of all objects to operate on
+		task.mode = taskXML.mode.toString().toUpperCase();	// Processing mode, e.g. DELETE, EXPORT
+		task.exportfile = taskXML.exportfile.toString();	// EXPORT mode only -- file to write out to (not yet implemented)
+		task.transactionbatch = new Number(taskXML.transactionbatch);	// Number of operations to batch together per transaction
+		task.query = query;									// List of one of more statements to build
+		task.join = taskXML.query.@join.toString().toUpperCase();		// Join mode for multiple statements, e.g. AND, OR
+		
+		tasks.push( task );									// Add this task to list of all tasks
+	}
+	
+	args.Tasks = tasks;										// Pass Tasks list containing all task objects back out
+	
+    return PIPELET_NEXT;
+}

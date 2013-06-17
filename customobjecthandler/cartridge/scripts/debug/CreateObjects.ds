@@ -1,0 +1,41 @@
+/**
+* This script used to generate test custom objects for the handler
+*   Input settings come from Assign node "Setup values"
+*
+*
+*   @input BeginVal : Number		// starting object number
+*   @input EndVal : Number			// ending object number
+*   @input Batch : Number			// Number of creates to batch per transaction
+*	@input ObjectPrefix: String		// Base string for object name
+*	@input ObjectType: String		// CustomObject type currently working on
+*	@output BeginVal : Number		// end value becomes next transaction's "begin"
+*
+*/
+importPackage( dw.system );
+importPackage( dw.object );
+importPackage( dw.util );
+
+function execute( args : PipelineDictionary ) : Number
+{
+    var beginVal : Number = args.BeginVal;	// starting object number
+    var endVal : Number = args.EndVal;		// ending object number
+    var batch : Number = args.Batch;		// Number of creates to batch per transaction
+    var objectPrefix: String = args.ObjectPrefix;	// Base string for object name
+    var objectType: String = args.ObjectType;		// CustomObject type currently working on
+    var currentObject : String;				// New object name
+    var i : Number;							// Tracks current object position
+    
+    for (i = beginVal; (i <= endVal) && (i < (beginVal + batch)); i++) {
+    	currentObject = objectPrefix + i;			// EX: "test" + 1 => "test1" will be object key
+    	if (CustomObjectMgr.getCustomObject(objectType, currentObject) == null) {	// try to create only if doesn't already exist
+    		CustomObjectMgr.createCustomObject(objectType, currentObject);
+    	}
+    	else {
+    		i++;	// Try next 
+    	}
+    }
+
+    args.BeginVal = i;	// Pass back out the last position as next begin point 
+
+    return PIPELET_NEXT;
+}
