@@ -1,6 +1,6 @@
 /**
 * Demandware Script File
-*
+*   test
 *	@input Task : Object	// One task object at a time read in
 *   @output Query : String	// Pass formatted query string out
 *   @output ParamList : Array
