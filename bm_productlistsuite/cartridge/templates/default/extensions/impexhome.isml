@@ -1,0 +1,47 @@
+<!--- TEMPLATENAME: impexhome.isml --->
+<isdecorate template="application/MenuFrame">
+<iscontent type="text/html" charset="UTF-8">
+
+<html>
+
+
+
+<isloop var="files" items="${pdict.Files}">
+<isprint value="${files.name}"/><br>
+</isloop>
+<br>
+
+
+<isloop var="productlists" items="${pdict.ProductLists}">
+<isprint value="${productlists.ID}"/><br>
+</isloop>
+
+
+
+
+
+			<br>
+				
+ <a href="${URLUtils.url('ProductListSearch-ProductListSearch')}" encoding="off">
+ 	Search
+</a>
+
+			<br>
+			<form action="${URLUtils.url('ProductListImpex-UploadFileToLocaleFS')}" method="post" enctype="multipart/form-data" id="formFileUpload">
+				<table>
+					<tr>
+						<td align="right" class="fielditem2">
+							<span>Select File:</span>
+						</td>
+						<td>
+							<input type="file" name="uploadFileName" id="uploadFileName" />
+							<input type="hidden" name="fileUploadTargetDirectory" id="fileUploadTargetDirectory" value="Impex/src/productlist/" />
+						</td>
+						<td>
+							<button type="submit">Upload</button>
+						</td>
+					</tr>
+				</table>
+			</form>
+</html>
+</isdecorate>

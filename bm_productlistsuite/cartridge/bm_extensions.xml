@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<extensions xmlns="http://www.demandware.com/xml/bmmodules/2007-12-11" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.demandware.com/xml/bmmodules/2007-12-11 bmext.xsd">
+<!-- =============================================================== -->
+<!-- ==                                                           == -->
+<!-- ==  SITE   MENU   EXTENSIONS                                 == -->
+<!-- ==                                                           == -->
+<!-- =============================================================== -->
+<!-- This file shows you an example how to create your own Business Manager Extensions.
+    It integrates custom menu items and corresponding pages on three places:
+    1. "DEMO Site Menu Extension" - Menu item within the site specific menu
+    2. "DEMO Site Submenu Extension within an existing Menu" - Menu within the existing "Site Preferences"
+    3. "DEMO Admin Extension" - Menu item within the Administration Menu
+    This file uses the pipeline "custom_extensionsactions" and includes two templates
+		- /extensions/adminmenupageextension
+		- /extensions/sitemenupageextension
+
+	Please make sure that your new menuitems and menuactions get unique ids.
+	If you use ids from the original Business Manager your menu items are not shown!
+	You can include your menu extensions into existing menus by referencing them in the menupath.
+	The Business Manager Menu IDs you find at the end of this file
+-->
+<!--
+	Menu Action as part of the site main menu (positioned at the bottom of the site main menu)
+-->
+<menuitem id="customsitemenuextension_id01" position="99999" site="true">
+  <name xml:lang="x-default">ProductLists Suite</name>
+  <short_description xml:lang="x-default">
+
+  </short_description>
+  <description xml:lang="x-default">
+  	Welcome to the ProductList Suite.
+  </description>
+  <icon>icons/star_yellow_add.gif</icon>
+</menuitem>
+<!--
+	Menu Action as part of the new main site menu extension <DEMO Site Menu Extension> (id: customsitemenuextension_id01)
+	(positioned at the bottom of the site main menu)
+-->
+<menuaction id="customsubmenu_id01" menupath="customsitemenuextension_id01" position="999" site="true">
+  <name xml:lang="x-default">ProductLists Manager</name>
+  <short_description xml:lang="x-default">
+	  Click here to manage ProductLists
+  </short_description>
+  <description xml:lang="x-default">
+	  Here you can specifiy a detailed description of your extension.
+  </description>
+  <exec pipeline="ProductListSuiteMenus" node="Manager"/>
+  <sub-pipelines>
+     <pipeline name="ProductListSuiteMenus-Manager" />
+  </sub-pipelines>
+  <parameters>
+	 <parameter name="SampleSiteParameter" value="Content of the sample parameter as used in the site menu (specified in bm_extensions.xml of the sample bm_custom_plugin cartridge)."/>
+	 <parameter name="menuname" value="Demo Site Submenu Extension"/>
+	 <parameter name="menupath" value="customsitemenuextension_id01"/>
+	 <parameter name="mainmenuname" value="DEMO Site Menu Extension"/>
+  </parameters>
+  <icon>icons/star_yellow_new.gif</icon>
+</menuaction>
+
+<menuaction id="customsubmenu_id02" menupath="customsitemenuextension_id01" position="999" site="true">
+  <name xml:lang="x-default">ProductLists Analytics</name>
+  <short_description xml:lang="x-default">
+	
+  </short_description>
+  <description xml:lang="x-default">
+	  Click here to see ProductLists Analytics
+  </description>
+  <exec pipeline="ProductListSuiteMenus" node="Analytics"/>
+  <sub-pipelines>
+     <pipeline name="ProductListSuiteMenus-Analytics" />
+  </sub-pipelines>
+  <parameters>
+	 <parameter name="SampleSiteParameter" value="Content of the sample parameter as used in the site menu (specified in bm_extensions.xml of the sample bm_custom_plugin cartridge)."/>
+	 <parameter name="menuname" value="Demo Site Submenu Extension"/>
+	 <parameter name="menupath" value="customsitemenuextension_id01"/>
+	 <parameter name="mainmenuname" value="DEMO Site Menu Extension"/>
+  </parameters>
+  <icon>icons/star_yellow_new.gif</icon>
+</menuaction>
+<!--
+	Menu Action as part of the existing site menu item <Site Preferences> (id: "site-prefs")
+	(positioned at the bottom of the site main menu)
+-->
+
+
+<!-- =============================================================== -->
+<!-- ==                                                           == -->
+<!-- ==  CUSTOM PREFERENCE EXTENSIONS                             == -->
+<!-- ==                                                           == -->
+<!-- =============================================================== -->
+<!--
+	A custom menu item in the Administration section
+-->
+<!-- CUSTOM Preferences Page -->
+<menuaction id="custom_sitepreference_id01" menupath="site-prefs" position="2000" site="true">
+  <name xml:lang="x-default">Custom Site Preference</name>
+  <short_description xml:lang="x-default">
+	  Custom Site Preferences (PREFERENCE NAME)
+  </short_description>
+  <description xml:lang="x-default">
+	  Configure the Custom Site Preferences.
+	  (The preference editor is shown only IF the custom preference was defined (Administration/Site Development/Custom Preference Types).
+  </description>
+  <exec pipeline="CustomPreferences" node="View"/>
+  <parameters>
+	<!-- The preference editor is shown only IF the custom preference has been defined (CUSTOM_PREFERENCEGROUP_ID) otherwise the BM home page is being shown -->
+	<parameter name="PrefGroupName" value="CUSTOM_PREFERENCEGROUP_ID"/>
+	<parameter name="menuname" value="Custom Site Preference"/>
+	<parameter name="mainmenuname" value="Site Preferences"/>
+  </parameters>
+  <icon>icons/star_big.gif</icon>		
+</menuaction>
+<!-- Form Extension: Order Search Form -->
+<formextension id="order-search">
+  <valueinput type="string" name="InvoiceNumber">
+    <label xml:lang="x-default">Invoice number</label>
+  </valueinput>
+  <valueinput type="int" name="OrderAttr2">
+    <label xml:lang="x-default">OrderAttr2 (Integer)</label>
+  </valueinput>
+  <valueinput type="double" name="OrderAttr3">
+    <label xml:lang="x-default">OrderAttr3 (Number)</label>
+  </valueinput>
+</formextension>
+<!-- Form Extension: Customer Search Form -->
+<formextension id="customer-search">
+  <valueinput type="string" name="TestAttr" defaultvalue="">
+    <label xml:lang="x-default">TestAttr</label>
+    <option>Value Option 1</option>
+    <option>Value Option 2</option>
+    <option>Value Option 3</option>
+			<option/>
+  </valueinput>
+</formextension>
+</extensions>

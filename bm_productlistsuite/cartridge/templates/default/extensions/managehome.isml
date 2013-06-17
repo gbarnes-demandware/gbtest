@@ -1,0 +1,17 @@
+<!--- TEMPLATENAME: managehome.isml --->
+<isdecorate template="application/MenuFrame">
+<!DOCTYPE html>
+<iscontent type="text/html" charset="UTF-8">
+
+
+<html>
+
+ <a href="${URLUtils.url('ProductListImpex-Start')}" encoding="off">
+ 	Impex
+</a>
+
+			
+</html>
+
+
+</isdecorate>
